@@ -1,5 +1,9 @@
 package asnrt
 
+import (
+	"reflect"
+)
+
 // Constants
 
 const (
@@ -42,7 +46,7 @@ type Buffer interface {
 
 type AsnType interface {
 	TypeId() uint8
-	Tag() int
+	Tag(value reflect.Value) int
 	MatchTag(tag int) bool
 }
 
