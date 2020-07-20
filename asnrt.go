@@ -53,6 +53,9 @@ type AsnType interface {
 type AsnModule interface {
 	GetType(id int) AsnType
 	GetValue(id int, v Any)
+	GetValueSet(id int, vs Any)
+	GetObject(id int, o Any)
+	GetObjectSet(id int, os Any)
 }
 
 // API Methods
