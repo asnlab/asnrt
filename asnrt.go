@@ -56,6 +56,7 @@ type AsnModule interface {
 	GetValueSet(id int, vs Any)
 	GetObject(id int, o Any)
 	GetObjectSet(id int, os Any)
+	AddTableConstraint(typeId int, objectSet Any)
 }
 
 // API Methods
