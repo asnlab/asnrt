@@ -51,9 +51,9 @@ type AsnType interface {
 }
 
 type AsnModule interface {
-	GetType(id int) AsnType
-	GetValue(id int, v Any)
-	GetValueSet(id int, vs Any)
+	GetType(typeId int) AsnType
+	GetValue(valueId int, value Any)
+	GetValueSet(valueSetId int, valueSet Any)
 	AddTableConstraint(typeId int, objectSet Any)
 }
 
