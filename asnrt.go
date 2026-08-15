@@ -67,6 +67,27 @@ type Runtime struct {
 	LoadMeta func(content []byte) (AsnModule, error)
 }
 
+// Wrapper carries the raw bytes of a value whose concrete Go type cannot be
+// referenced at compile time because doing so would create a circular import.
+// It is produced by the codec when decoding a field whose type is a Wrapper.
+type Wrapper struct {
+	Raw   []byte  // the value encoded per Rules
+	Rules byte    // encoding rules Raw is encoded with
+	Meta  AsnType // metadata of the wrapped value
+}
+
+// Decode decodes Raw, using the supplied runtime, into the concrete type T.
+func Decode[T any](runtime *Runtime, w Wrapper) (T, error) {
+	var result T
+	buffer, err := runtime.Wrap(w.Raw, w.Rules)
+	if err != nil {
+		return result, err
+	}
+	err = runtime.Decode(buffer, &result, w.Meta)
+	return result, err
+}
+
+
 var SET_MASK []byte = []byte{0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01}
 var CLEAR_MASK []byte = []byte{0x7F, 0xBF, 0xDF, 0xEF, 0xF7, 0xFB, 0xFD, 0xFE}
 var FIRST_MASK []byte = []byte{0xFF, 0x7F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x01, 0x00}
