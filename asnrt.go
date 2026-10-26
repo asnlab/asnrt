@@ -38,6 +38,49 @@ type OctetString []byte
 
 type ObjectIdentifier []int
 
+// NamedNumber pairs an ASN.1 identifier with its numeric value. It backs
+// ENUMERATED / named-numbered INTEGER values and the named bits of a BIT
+// STRING. Mirrors asnjc runtime.type.NamedNumber.
+type NamedNumber struct {
+	Name   string
+	Number int
+}
+
+func NewNamedNumber(name string, number int) NamedNumber {
+	return NamedNumber{name, number}
+}
+
+// NamedBits is a map-based view over the named-bit fields of an ASN.1 BIT
+// STRING value, mirroring asnjc runtime.value.NamedBits. It records, by bit
+// number, which named bits are set or explicitly cleared.
+type NamedBits map[int]bool
+
+func NewNamedBits(namedBits map[int]bool) NamedBits {
+	return namedBits
+}
+
+// GetNamedBit reports whether the named bit is set.
+func (nb NamedBits) GetNamedBit(n NamedNumber) bool {
+	return nb.GetBit(n.Number)
+}
+
+// SetNamedBit records the named bit as set (b==true) or cleared (b==false).
+func (nb NamedBits) SetNamedBit(n NamedNumber, b bool) {
+	nb.SetBit(n.Number, b)
+}
+
+// GetBit reports whether the bit at the given number is set. Bits that are not
+// recorded read as false.
+func (nb NamedBits) GetBit(bit int) bool {
+	v, ok := nb[bit]
+	return ok && v
+}
+
+// SetBit records the bit at the given number as set (b==true) or cleared.
+func (nb NamedBits) SetBit(bit int, b bool) {
+	nb[bit] = b
+}
+
 type Buffer interface {
 	EncodingRules() byte
 	Array() []byte
@@ -120,7 +163,7 @@ func (self *BitString) SetBit(bit int, b bool) {
 	offset := bit % 8
 	index := bit / 8
 	if index >= len(self.Bytes) {
-		self.Bytes = append(self.Bytes, make([]byte, len(self.Bytes)-index)...)
+		self.Bytes = append(self.Bytes, make([]byte, index-len(self.Bytes)+1)...)
 	}
 	if b {
 		self.Bytes[index] |= SET_MASK[offset]
@@ -137,6 +180,18 @@ func (self *BitString) SetBit(bit int, b bool) {
 			self.UnusedBits = (uint8)(8 - index)
 		}
 	}
+}
+
+// GetNamedBit reports whether the named bit (identified by a NamedNumber) is
+// set in the value, mirroring asnjc value.BitString.getBit(NamedNumber).
+func (self *BitString) GetNamedBit(n NamedNumber) bool {
+	return self.Bit(n.Number)
+}
+
+// SetNamedBit sets (b==true) or clears (b==false) the named bit identified by a
+// NamedNumber, mirroring asnjc value.BitString.setBit(NamedNumber, boolean).
+func (self *BitString) SetNamedBit(n NamedNumber, b bool) {
+	self.SetBit(n.Number, b)
 }
 
 func (self *BitString) TrimTailingZeros() {
